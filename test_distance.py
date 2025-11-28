@@ -4,7 +4,7 @@ import os
 
 if __name__ == "__main__":
     # Test with your file
-    test_file = "1EHZ.pdb" 
+    test_file = "training_pdb_files/1X8W.pdb" 
     
     if os.path.exists(test_file):
         print(f"Processing {test_file}...")
