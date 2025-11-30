@@ -1,7 +1,16 @@
-# This is still in cosntruction so expect bugs.
+# RNA Training Script
+# This script trains an RNA objective function based on provided PDB or CIF files.
+# Run this script from the command line with the following options:
+# -d <data_folder>: Path to the folder containing structure files.  
+# -f <file_format>: The file format to use for training (pdb or cif). Default is pdb.
+# Example usage:
+# py rna_training.py -d rna_data/pdb -f pdb
 
 import math
 import os
+import glob
+import argparse # Library for command-line arguments
+import sys
 
 # Import your existing tools
 from rna_loader import load_rna_structure
@@ -10,55 +19,41 @@ from rna_distance import get_all_distances
 def get_pair_name(res1, res2):
     """
     Standardizes pair names so order doesn't matter.
-    Example: 'A' and 'U' -> 'AU', 'U' and 'A' -> 'AU'.
-    This reduces the combinations to the required 10 types.
+    Example: 'A' and 'U' -> 'AU'.
     """
-    # Sort the names alphabetically to ensure consistency
     sorted_pair = sorted([res1, res2])
     return f"{sorted_pair[0]}{sorted_pair[1]}"
 
-def train_objective_function(pdb_files, atom_type="C3'", bin_size=1.0, max_dist=20.0):
+def train_objective_function(structure_files, atom_type="C3'", bin_size=1.0, max_dist=20.0):
     """
     Main training logic.
-    1. Reads PDB files.
-    2. Builds histograms for specific pairs and the reference (XX).
-    3. Computes the scoring function.
     """
-    
     # 1. Initialize Histograms
-    # We need 10 specific pairs + 1 Reference "XX"
-    # Each histogram is a list of counts, initialized to 0.
     num_bins = int(max_dist / bin_size) + 1
-    
-    # Dictionary to store counts: {'AU': [0,0...], 'GC': [0,0...] ...}
     pair_counts = {} 
-    ref_counts = [0] * num_bins  # This is the 'XX' histogram
-    
+    ref_counts = [0] * num_bins  
     valid_bases = ['A', 'U', 'C', 'G']
     
-    # Pre-fill dictionary keys for the 10 canonical pairs
     for i in range(len(valid_bases)):
-        for j in range(i, len(valid_bases)): # Start at i to include AA, UU etc.
+        for j in range(i, len(valid_bases)): 
             pair_name = get_pair_name(valid_bases[i], valid_bases[j])
             pair_counts[pair_name] = [0] * num_bins
 
-    print(f"Initialized training for {len(pdb_files)} files...")
+    print(f"Initialized training for {len(structure_files)} files...")
 
-    # 2. Process Files and Count
-    for filepath in pdb_files:
+    # 2. Process Files
+    for filepath in structure_files:
         if not os.path.exists(filepath):
             continue
             
+        # rna_loader automatically handles parsing based on extension
         structure = load_rna_structure(filepath)
         if structure is None:
             continue
             
-        # Get distances using your existing code
-        # Note: Training only uses Intrachain distances 
         interactions = get_all_distances(structure, atom_name=atom_type, max_distance=max_dist)
         
         for item in interactions:
-            # Training Requirement: Only Intrachain 
             if item['Type'] != 'Intrachain':
                 continue
                 
@@ -66,33 +61,20 @@ def train_objective_function(pdb_files, atom_type="C3'", bin_size=1.0, max_dist=
             r2 = item['Res2']
             dist = item['Distance']
             
-            # Skip non-standard bases (e.g., modified bases not in A,U,C,G)
             if r1 not in valid_bases or r2 not in valid_bases:
                 continue
 
-            # Determine Bin Index
-            # e.g., distance 5.9 -> index 5
             bin_idx = int(dist // bin_size)
-            
             if bin_idx >= num_bins:
                 continue
 
-            # Increment Pair Count (Observed)
             pair_name = get_pair_name(r1, r2)
             pair_counts[pair_name][bin_idx] += 1
-            
-            # Increment Reference Count (XX) [cite: 102]
-            ref_counts[bin_idx] += 1
+            ref_counts[bin_idx] += 1 # [cite: 30]
 
-    # 3. Calculate Scores (Pseudo-Energy)
-    # Score = -log( P(obs) / P(ref) )
+    # 3. Calculate Scores
     print("Computing scores...")
-    
-    # We return a dictionary containing the final scores for each pair
-    # Format: {'AU': [score_bin_0, score_bin_1...], ...}
     final_scores = {}
-    
-    # Calculate Total Counts (N_ij and N_xx) for normalization
     total_ref = sum(ref_counts)
     
     for pair, counts in pair_counts.items():
@@ -100,38 +82,28 @@ def train_objective_function(pdb_files, atom_type="C3'", bin_size=1.0, max_dist=
         total_pair = sum(counts)
         
         for r in range(num_bins):
-            # Avoid division by zero
             if total_pair == 0 or total_ref == 0:
-                scores.append(10.0) # Max penalty
+                scores.append(10.0) 
                 continue
                 
-            # Frequency observed: count / total_pair
             freq_obs = counts[r] / total_pair
-            
-            # Frequency reference: count_ref / total_ref
             freq_ref = ref_counts[r] / total_ref
             
-            # Calculate Score
+            # Score = -log(Obs/Ref) [cite: 32]
             if freq_obs > 0 and freq_ref > 0:
                 ratio = freq_obs / freq_ref
                 val = -math.log(ratio)
                 scores.append(val)
             else:
-                # If we never observe this distance, assign high energy (penalty)
-                # Requirement: Max scoring value arbitrarily set to 10 [cite: 112]
-                scores.append(10.0) 
+                scores.append(10.0) # Max penalty [cite: 33]
                 
         final_scores[pair] = scores
         
     return final_scores
 
 def save_scores(scores_dict, output_dir="potentials"):
-    """
-    Writes the 10 files required by instructions.
-    """
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
-        
     for pair, values in scores_dict.items():
         filename = os.path.join(output_dir, f"{pair}.txt")
         with open(filename, "w") as f:
@@ -139,11 +111,53 @@ def save_scores(scores_dict, output_dir="potentials"):
                 f.write(f"{v:.4f}\n")
     print(f"Saved 10 scoring files to folder '{output_dir}'")
 
-# --- usage example ---
+# --- USER INTERFACE BLOCK ---
 if __name__ == "__main__":
-    # List your training PDBs here
-    # For testing, we just use the one you have
-    training_files = ["1EHZ.pdb", "1U9S.pdb"] 
+    # 1. Create the Argument Parser
+    parser = argparse.ArgumentParser(
+        description="Train an RNA objective function from PDB or CIF files."
+    )
     
-    scores = train_objective_function(training_files)
+    # 2. Define allowed arguments
+    parser.add_argument(
+        "-d", "--data", 
+        type=str, 
+        required=True, 
+        help="Path to the folder containing structure files (e.g. 'rna_data/pdb')"
+    )
+    
+    parser.add_argument(
+        "-f", "--format", 
+        type=str, 
+        choices=['pdb', 'cif'], 
+        default='pdb',
+        help="The file format to use for training (pdb or cif). Default is pdb."
+    )
+    
+    # 3. Parse arguments
+    args = parser.parse_args()
+    
+    # 4. Validate Directory
+    if not os.path.isdir(args.data):
+        print(f"Error: Directory '{args.data}' does not exist.")
+        sys.exit(1)
+
+    # 5. Find files based on user choice
+    # Case insensitive search for extension
+    search_pattern = os.path.join(args.data, f"*.{args.format}")
+    found_files = glob.glob(search_pattern)
+    
+    # Also try uppercase (e.g., .PDB or .CIF) just in case
+    if len(found_files) == 0:
+         search_pattern_upper = os.path.join(args.data, f"*.{args.format.upper()}")
+         found_files = glob.glob(search_pattern_upper)
+
+    if len(found_files) == 0:
+        print(f"No files ending in .{args.format} found in {args.data}")
+        sys.exit(1)
+
+    print(f"Training on {len(found_files)} {args.format.upper()} files from {args.data}...")
+    
+    # 6. Run Training
+    scores = train_objective_function(found_files)
     save_scores(scores)
