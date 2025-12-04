@@ -7,11 +7,9 @@ VALID_RNA_BASES = {'A', 'U', 'C', 'G'}
 
 def is_strict_pure_rna(chain):
     """
-    STRICT FILTER: Returns True ONLY if every single residue in the chain
-    is a standard A, U, C, or G.
+    STRICT FILTER: Returns True ONLY if every single residue in the chain is A, U, C, or G.
     
-    If it finds a Protein residue (ALA, GLY), DNA (DA, DT), 
-    or modified RNA (5MC, PSU, H2U), it returns False.
+    If it finds a protein residue (ALA, GLY), DNA (DA, DT), or modified RNA (5MC, PSU, H2U), it returns False.
     """
     for residue in chain:
         # Ignore water/ions (heteroatoms) - we only check the main polymer
@@ -27,23 +25,23 @@ def is_strict_pure_rna(chain):
             
     return True
 
-def get_all_distances(model, atom_name="C3'", max_distance=20.0, seq_sep=3):
+def get_all_distances(model, atom_name="C3'", max_distance=20.0, min_distance=3):
     """
     Calculates distances but strictly discards any chain containing 
     non-standard residues.
     """
     interactions = []
     
-    # 1. Filter and Extract Atoms
+    # 1. Filter and extract atoms
     valid_atoms = []
     
     for chain in model:
         # --- STRICT CHAIN FILTER ---
-        # If the chain contains ANYTHING except A, U, C, G -> Skip it entirely.
+        # If the chain contains ANYTHING except A, U, C, G -> skip
         if not is_strict_pure_rna(chain):
             continue
 
-        # If we passed the check, extract all C3' atoms from this pure chain
+        # If we passed the check, extract all C3' atoms (default) from this pure chain
         for residue in chain:
             if residue.id[0] != ' ':
                 continue
@@ -57,25 +55,25 @@ def get_all_distances(model, atom_name="C3'", max_distance=20.0, seq_sep=3):
                     "atom": atom
                 })
 
-    # 2. Calculate Pairwise Distances (Standard Logic)
+    # 2. Calculate pairwise distances
     count = len(valid_atoms)
     for i in range(count):
         for j in range(i + 1, count):
             atom_A = valid_atoms[i]
             atom_B = valid_atoms[j]
             
-            # Sequence Separation Filter (Intrachain only)
+            # Sequence separation filter (intrachain only)
             is_same_chain = (atom_A['chain'] == atom_B['chain'])
             
             if is_same_chain:
                 seq_dist = abs(atom_A['res_num'] - atom_B['res_num'])
-                if seq_dist <= seq_sep:
+                if seq_dist <= min_distance:
                     continue
                 interaction_type = "Intrachain"
             else:
                 interaction_type = "Interchain"
 
-            # Euclidean Distance Filter
+            # Euclidean distance
             dist = atom_A['atom'] - atom_B['atom']
             
             if dist <= max_distance:
