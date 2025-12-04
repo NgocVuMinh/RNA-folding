@@ -5,9 +5,8 @@ import glob
 import argparse
 import sys
 
-from rna_loader import load_rna_structure
-from rna_distance import get_all_distances
-from rna_training import get_pair_name, get_all_distances, train_objective_function, save_scores
+from rna_training import train_objective_function
+from utils import save_scores
 
 # Command-line input
 parser = argparse.ArgumentParser(description="Train an RNA objective function from PDB or CIF files.")
@@ -77,7 +76,10 @@ if __name__ == "__main__":
                                       min_dist=args.min_dist,
                                       bandwidth="scott")
     print(f"Saving scores to {args.out_dir}...")
+
     save_scores(scores, output_dir=args.out_dir)
+
+
 
 
 
