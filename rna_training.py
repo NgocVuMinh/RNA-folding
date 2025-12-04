@@ -25,7 +25,7 @@ def get_pair_name(res1, res2):
     return f"{sorted_pair[0]}{sorted_pair[1]}"
 
 
-def train_objective_function(structure_files, atom_type="C3'", mode="histogram", bin_size=1.0, max_dist=20.0):
+def train_objective_function(structure_files, atom_type="C3'", mode="histogram", bin_size=1.0, min_dist=3.0, max_dist=20.0):
     """
     Main training logic.
     """
