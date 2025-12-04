@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-
+# rna_downloader.py
 # A script to use the PDB REST API to download RNA structure files
 # PDB and mmCIF formats
 # python rna_downloader.py
