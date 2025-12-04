@@ -72,12 +72,12 @@ To train the objective function, run the rna_training.py script from the termina
 Option 1: Training with PDB files
 
 ```bash
-py rna_training.py --data rna_data/pdb --format pdb
+python main.py --data rna_data/pdb --format pdb --atom C3\' --mode kernel --out_dir out_kernel_test
 ```
 Option 2: Training with mmCIF files
 
 ```bash
-py rna_training.py --data rna_data/cif --format cif
+python main.py --data rna_data/pdb --format cif --atom C3\' --mode kernel --out_dir out_kernel_test
 ```
 
 
