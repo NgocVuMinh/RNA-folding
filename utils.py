@@ -1,3 +1,6 @@
+# utils.py
+# This file contains utility functions for RNA structure processing
+
 import os
 
 def get_pair_name(res1, res2):

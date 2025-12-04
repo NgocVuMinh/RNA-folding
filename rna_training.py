@@ -1,10 +1,6 @@
 # RNA Training Script
 # This script trains an RNA objective function based on provided PDB or CIF files.
-# Run this script from the command line with the following options:
-# -d <data_folder>: Path to the folder containing structure files.  
-# -f <file_format>: The file format to use for training (pdb or cif). Default is pdb.
-# Example usage:
-# py rna_training.py -d rna_data/pdb -f pdb
+
 
 import numpy as np
 import math
