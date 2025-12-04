@@ -16,15 +16,7 @@ from scipy.stats import gaussian_kde
 
 from rna_loader import load_rna_structure
 from rna_distance import get_all_distances
-
-
-def get_pair_name(res1, res2):
-    """
-    Standardizes pair names so order doesn't matter.
-    Example: 'A' and 'U' -> 'AU'.
-    """
-    sorted_pair = sorted([res1, res2])
-    return f"{sorted_pair[0]}{sorted_pair[1]}"
+from utils import get_pair_name
 
 
 def train_objective_function(structure_files, 
@@ -189,3 +181,5 @@ def train_objective_function(structure_files,
     print(f"\nTraining {mode} completed.")
     
     return final_scores
+
+
