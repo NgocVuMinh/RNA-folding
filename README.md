@@ -19,11 +19,11 @@ We obtained 100 RNA structures from *Homo sapiens* from the [RCSB PDB REST API](
 
 ## Loading PDB and mmCIF files
 
-The project utilizes the Biopython library (Bio.PDB) to parse structural data. The loading module (rna_loader.py) is designed to be format-agnostic:
+The project utilizes the Biopython library (Bio.PDB) to parse structural data. The loading module (`rna_loader.py`) is designed to be format-agnostic:
 
-- Format Detection: The script automatically detects the file extension (.pdb or .cif) to instantiate the correct parser (PDBParser or MMCIFParser).
+- Format detection: The script automatically detects the file extension (.pdb or .cif) to instantiate the correct parser (PDBParser or MMCIFParser).
 
-- Model Selection: For files containing multiple models (common in NMR structures), the loader automatically selects the first model (Model 0) to ensure consistency across the dataset.
+- Model selection: For files containing multiple models (common in NMR structures), the loader automatically selects the first model (model 0).
 
 ## Cleaning the chains
 
@@ -59,12 +59,11 @@ The training script (`rna_training.py`) processes the cleaned dataset to generat
 
 u(r)=−log(fXXRef​(r)fijObs​(r)​)
 
-
     - Negative score: The pair is observed more often than the reference. This indicates a favorable, stable interaction (low energy).
 
     - Positive score: The pair is observed less often than the reference. This indicates an unfavorable interaction (high energy).
 
-The script outputs 10 scoring files, which serve as the "knowledge base" for evaluating new RNA structures.
+The script outputs 10 scoring files for evaluating new RNA structures.
 
 ## Usage
 
