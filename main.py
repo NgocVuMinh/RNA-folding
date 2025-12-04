@@ -74,7 +74,8 @@ if __name__ == "__main__":
                                       mode=args.mode, 
                                       bin_size=args.bin_size, 
                                       max_dist=args.max_dist,
-                                      min_dist=args.min_dist)
+                                      min_dist=args.min_dist,
+                                      bandwidth="scott")
     print(f"Saving scores to {args.out_dir}...")
     save_scores(scores, output_dir=args.out_dir)
 
