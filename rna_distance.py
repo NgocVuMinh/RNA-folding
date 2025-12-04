@@ -1,47 +1,48 @@
 # rna_distance.py
-
 from Bio.PDB import Entity
 
-# Define the standard RNA alphabet
+# Standard RNA nucleotides
 VALID_RNA_BASES = {'A', 'U', 'C', 'G'}
 
 def is_strict_pure_rna(chain):
     """
-    STRICT FILTER: Returns True ONLY if every single residue in the chain is A, U, C, or G.
-    
-    If it finds a protein residue (ALA, GLY), DNA (DA, DT), or modified RNA (5MC, PSU, H2U), it returns False.
+    Checks if a chain contains ONLY standard RNA bases (A, U, C, G).
+    Returns False if any protein, DNA, or modified base is found.
     """
     for residue in chain:
-        # Ignore water/ions (heteroatoms) - we only check the main polymer
+        # Ignore water molecules and ions (heteroatoms)
         if residue.id[0] != ' ':
             continue
             
         res_name = residue.get_resname().strip()
         
-        # If we find ONE bad residue, the whole chain is "contaminated"
+        # If we find even one non-standard base, reject the whole chain
         if res_name not in VALID_RNA_BASES:
-            # print(f"Chain {chain.id} rejected: contains {res_name}")
             return False
             
     return True
 
 def get_all_distances(model, atom_name="C3'", max_distance=20.0, min_distance=3):
     """
-    Calculates distances but strictly discards any chain containing 
-    non-standard residues.
+    Calculates pairwise distances for clean RNA chains.
+    
+    Args:
+        model: Bio.PDB Model object.
+        atom_name (str): Atom to measure (default C3').
+        max_distance (float): Cutoff for interaction (default 20A).
+        min_distance (int): Sequence separation cutoff. 
+                            If 3, discards i to i+3, keeps i to i+4.
     """
     interactions = []
     
-    # 1. Filter and extract atoms
+    # 1. Extract valid atoms from pure RNA chains
     valid_atoms = []
     
     for chain in model:
-        # --- STRICT CHAIN FILTER ---
-        # If the chain contains ANYTHING except A, U, C, G -> skip
+        # Filter: Skip "dirty" chains (containing proteins/modified bases)
         if not is_strict_pure_rna(chain):
             continue
 
-        # If we passed the check, extract all C3' atoms (default) from this pure chain
         for residue in chain:
             if residue.id[0] != ' ':
                 continue
@@ -50,38 +51,37 @@ def get_all_distances(model, atom_name="C3'", max_distance=20.0, min_distance=3)
                 atom = residue[atom_name]
                 valid_atoms.append({
                     "chain": chain.id,
-                    "res_num": residue.id[1],
+                    "res_num": residue.id[1], # Sequence number
                     "res_name": residue.get_resname().strip(),
                     "atom": atom
                 })
 
-    # 2. Calculate pairwise distances
+    # 2. Compute Distances
     count = len(valid_atoms)
     for i in range(count):
         for j in range(i + 1, count):
             atom_A = valid_atoms[i]
             atom_B = valid_atoms[j]
             
-            # Sequence separation filter (intrachain only)
-            is_same_chain = (atom_A['chain'] == atom_B['chain'])
-            
-            if is_same_chain:
+            # --- FILTER: Sequence Separation ---
+            if atom_A['chain'] == atom_B['chain']:
                 seq_dist = abs(atom_A['res_num'] - atom_B['res_num'])
+                
+                # Instruction: "separated by at least 3 positions"
+                # Logic: If min_dist=3, we skip 1-2, 1-3, 1-4. We keep 1-5 (dist 4).
                 if seq_dist <= min_distance:
                     continue
                 interaction_type = "Intrachain"
             else:
                 interaction_type = "Interchain"
 
-            # Euclidean distance
+            # --- CALCULATION: Euclidean Distance ---
             dist = atom_A['atom'] - atom_B['atom']
             
             if dist <= max_distance:
                 interactions.append({
                     "Res1": atom_A['res_name'],
                     "Res2": atom_B['res_name'],
-                    "Chain1": atom_A['chain'],
-                    "Chain2": atom_B['chain'],
                     "Type": interaction_type,
                     "Distance": dist
                 })
