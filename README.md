@@ -1,84 +1,174 @@
-# RNA-folding
+# RNA Statistical Potential: Knowledge-Based Scoring Function
 
-**M2 GENIOMHE - Univ Evry Paris-Saclay (2025-2026)**
+**Course: Bioinformatics of RNA and non-coding world**
 
-**Our project for the "Bioinformatics of RNA and non-coding world" course**
+**M2 GENIOMHE - Univ Evry Paris-Saclay**
 
-- **Minh Ngoc VU**
-- **Erine Benoist**
+**Year: 2025-2026**
 
-## Overview
+**Authors:**  
+- Minh Ngoc VU  
+- Erine BENOIST
 
-For RNA structures, a native folding is the one with the lowest Gibbs free energy. The purpose of the project is to develop an objective function to estimate the energy and thus evaluating how close a predicted fold is to the optimal / native fold. 
+---
 
-The scoring function is a statistical potential derived from known experimental data. It calculates pseudo-energies based on the probability of observing specific atomic distances between residue pairs.
+## 📌 Overview
 
-## Dataset
+For a given ribonucleotide chain, the RNA folding problem consists of finding the native fold among an astronomically large number of possible conformations. The native fold is generally considered the one with the lowest Gibbs free energy.
 
-We obtained 100 RNA structures from *Homo sapiens* from the [RCSB PDB REST API](https://www.rcsb.org/docs/programmatic-access/web-apis-overview). Each structure was obtained in both PDB and CIF formats.
+The goal of this project is to develop an objective function (scoring function) to estimate this energy. By evaluating the “pseudo-energy” of a conformation, we can determine how close a predicted structure is to the optimal/native fold.
 
-## Loading PDB and mmCIF files
+Our scoring function is a statistical potential derived from experimentally determined RNA structures. It relies on the inverse Boltzmann principle, calculating pseudo-energies based on the frequency of atomic interactions observed in nature.
 
-The project utilizes the Biopython library (Bio.PDB) to parse structural data. The loading module (`rna_loader.py`) is designed to be format-agnostic:
+---
 
-- Format detection: The script automatically detects the file extension (.pdb or .cif) to instantiate the correct parser (PDBParser or MMCIFParser).
+## 🛠️ Installation & Requirements
 
-- Model selection: For files containing multiple models (common in NMR structures), the loader automatically selects the first model (model 0).
+To run this project, you need Python 3 and the following scientific libraries.
 
-## Cleaning the chains
+### 1. Dependencies
 
-To generate a high-quality statistical potential, we implemented a strict filtering mechanism in `rna_distance.py`. Experimental PDB files often contain "noise" such as protein chains, DNA-RNA hybrids, or ambiguous IUPAC codes.
-
-Our `is_strict_pure_rna` function applies the following logic:
-
-- Standard bases only: It scans every chain to ensure it is composed exclusively of standard RNA bases (Adenine, Uracil, Cytosine, Guanine).
-
-- Whole-chain rejection: If a chain contains a single non-standard residue (e.g., amino acids, modified bases, or unknown 'N'), the entire chain is discarded.
-
-This ensures that our distance calculations are based solely on pure, unambiguous RNA interactions.
-
-## Training the scoring function
-
-The training script (`rna_training.py`) processes the cleaned dataset to generate the "scoring profiles". The goal is to learn the statistical rules of native RNA folding by following three key steps:
-
-- Distance categorization: We extract geometric data to define what a "contact" looks like:
-
-    - Atoms: We measure distances between a specific atom (default is C3').
-
-    - Filtering: We only consider intrachain interactions (within the same molecule) where residues are separated by at least 3 positions (∣i−j∣>3). This focuses the model on folding rather than local bonds.
-
-    - Grouping: Pairs are grouped into 10 categories (AA, AU, AC, AG, UU, UC, UG, CC, CG, GG) plus a reference category.
-
-- Frequency calculation: We calculate how often interactions occur compared to random chance:
-
-    - Observed frequency (fijObs​): How often we see a specific pair (e.g., A-U) at a certain distance.
-
-    - Reference frequency (fXXRef​): How often we see any pair at that distance. This "XX" reference represents the average shape of the RNA backbone, ignoring specific base types.
-
-- Score computation: We convert these probabilities into a pseudo-energy score using the Inverse Boltzmann principle. The formula is:
-
-u(r)=−log(fXXRef​(r)fijObs​(r)​)
-
-    - Negative score: The pair is observed more often than the reference. This indicates a favorable, stable interaction (low energy).
-
-    - Positive score: The pair is observed less often than the reference. This indicates an unfavorable interaction (high energy).
-
-The script outputs 10 scoring files for evaluating new RNA structures.
-
-## Usage
-
-To train the objective function, run the rna_training.py script from the terminal. We specify the path to the input data and the file format (default is PDB).
-
-Option 1: Training with PDB files
+Install the required packages using pip:
 
 ```bash
-python main.py --data rna_data/pdb --format pdb --atom C3\' --mode kernel --out_dir out_kernel_test
+pip install biopython numpy scipy matplotlib
 ```
-Option 2: Training with mmCIF files
+
+### 2. Project Structure
+
+- **main.py** — Central entry point, handles CLI arguments and orchestrates the training process  
+- **rna_loader.py** — Parses PDB and CIF files using Biopython  
+- **rna_distance.py** — Computes Euclidean distances and filters invalid/non-RNA chains  
+- **rna_training.py** — Core statistical potential logic (Histograms + KDE)  
+- **rna_plot.py** — Generates plots (Distance vs Energy)  
+- **rna_downloader.py** — Downloads structures via the RCSB PDB API  
+- **utils.py** — Helper functions (file saving, formatting)
+
+---
+
+## 🚀 Usage
+
+### 1. Data Acquisition (Optional)
+
+If you do not have a dataset, download RNA structures:
 
 ```bash
-python main.py --data rna_data/pdb --format cif --atom C3\' --mode kernel --out_dir out_kernel_test
+python rna_downloader.py
 ```
 
+This will create an `rna_data/` folder containing PDB and mmCIF files.
 
+---
 
+### 2. Training the Objective Function
+
+#### Basic Usage (PDB format)
+
+```bash
+python main.py --data rna_data/pdb --format pdb --out_dir potentials
+```
+
+#### Advanced Usage (Kernel Density Estimation + Custom Atom)
+
+```bash
+python main.py --data rna_data/cif --format cif --mode kernel --atom "C3'" --out_dir out_kde
+```
+
+---
+
+### 3. Visualizing the Results
+
+```bash
+python rna_plot.py --input potentials --output plots
+```
+
+Parameters:  
+- `--input` : Folder containing .txt scoring files  
+- `--output`: Folder where .png plots will be saved  
+
+---
+
+## 🔧 Command Line Arguments (main.py)
+
+| Argument | Description | Default |
+|---------|-------------|---------|
+| `-d, --data` | Path to structure folder | **Required** |
+| `-f, --format` | File format (`pdb` or `cif`) | pdb |
+| `-m, --mode` | Calculation method (`histogram` or `kernel`) | histogram |
+| `-a, --atom` | Atom used for distance calculation | C3' |
+| `-b, --bin_size` | Histogram bin size (Å) | 1.0 |
+| `--min_dist` | Minimum distance threshold (Å) | 3.0 |
+| `--max_dist` | Maximum distance threshold (Å) | 20.0 |
+| `-o, --out_dir` | Output directory | potentials |
+
+---
+
+## 🔬 Methodology
+
+### 1. Data Loading & Cleaning
+
+- Uses **Biopython** to parse structures  
+- Handles **both PDB and CIF formats**  
+- Selects **Model 0** for NMR files  
+- Removes chains containing:
+  - amino acids  
+  - DNA  
+  - modified bases  
+  - ambiguous nucleotide “N”  
+
+Only **pure RNA chains** are kept for training.
+
+---
+
+### 2. Distance Calculation
+
+We define an “interaction” as:
+
+- Measured between **C3' atoms**  
+- Only **intrachain** interactions  
+- Residue separation ≥ 3 positions:  
+
+\[
+|i - j| > 3
+\]
+
+This avoids trivial backbone-local interactions.
+
+---
+
+### 3. The Objective Function
+
+The statistical potential is computed using the inverse Boltzmann principle:
+
+\[
+u(r) = -\log\left(\frac{f_{ij}^{Obs}(r)}{f_{XX}^{Ref}(r)}\right)
+\]
+
+Where:
+
+- \( f_{ij}^{Obs}(r) \): Observed probability of interacting pair \(i-j\) at distance \(r\)  
+- \( f_{XX}^{Ref}(r) \): Reference state probability (any pair at distance \(r\))  
+
+**Interpretation of the score:**
+
+- **Negative** → interaction more frequent than random → **favorable**  
+- **Positive** → interaction less frequent than random → **unfavorable**
+
+---
+
+## 📊 Outputs
+
+Training produces `.txt` scoring profiles (distance vs pseudo-energy).  
+Each file corresponds to a base pair (e.g. `AU.txt`, `GG.txt`).
+
+`rna_plot.py` converts these into `.png` plots.
+
+---
+
+## 📁 Dataset
+
+We obtained **100 RNA structures** from *Homo sapiens* via the  
+[RCSB PDB REST API](https://www.rcsb.org/docs/programmatic-access/web-apis-overview).  
+Each structure was downloaded in both **PDB** and **CIF** format.
+
+---
