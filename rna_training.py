@@ -9,12 +9,12 @@
 import math
 import os
 import glob
-import argparse # Library for command-line arguments
+import argparse
 import sys
 
-# Import your existing tools
 from rna_loader import load_rna_structure
 from rna_distance import get_all_distances
+
 
 def get_pair_name(res1, res2):
     """
@@ -24,11 +24,12 @@ def get_pair_name(res1, res2):
     sorted_pair = sorted([res1, res2])
     return f"{sorted_pair[0]}{sorted_pair[1]}"
 
-def train_objective_function(structure_files, atom_type="C3'", bin_size=1.0, max_dist=20.0):
+
+def train_objective_function(structure_files, atom_type="C3'", mode="histogram", bin_size=1.0, max_dist=20.0):
     """
     Main training logic.
     """
-    # 1. Initialize Histograms
+    # 1. Initialize histograms
     num_bins = int(max_dist / bin_size) + 1
     pair_counts = {} 
     ref_counts = [0] * num_bins  
@@ -41,12 +42,11 @@ def train_objective_function(structure_files, atom_type="C3'", bin_size=1.0, max
 
     print(f"Initialized training for {len(structure_files)} files...")
 
-    # 2. Process Files
+    # 2. Process files
     for filepath in structure_files:
         if not os.path.exists(filepath):
             continue
             
-        # rna_loader automatically handles parsing based on extension
         structure = load_rna_structure(filepath)
         if structure is None:
             continue
@@ -72,7 +72,7 @@ def train_objective_function(structure_files, atom_type="C3'", bin_size=1.0, max
             pair_counts[pair_name][bin_idx] += 1
             ref_counts[bin_idx] += 1 # [cite: 30]
 
-    # 3. Calculate Scores
+    # 3. Calculate scores
     print("Computing scores...")
     final_scores = {}
     total_ref = sum(ref_counts)
@@ -101,6 +101,7 @@ def train_objective_function(structure_files, atom_type="C3'", bin_size=1.0, max
         
     return final_scores
 
+
 def save_scores(scores_dict, output_dir="potentials"):
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -111,53 +112,3 @@ def save_scores(scores_dict, output_dir="potentials"):
                 f.write(f"{v:.4f}\n")
     print(f"Saved 10 scoring files to folder '{output_dir}'")
 
-# --- USER INTERFACE BLOCK ---
-if __name__ == "__main__":
-    # 1. Create the Argument Parser
-    parser = argparse.ArgumentParser(
-        description="Train an RNA objective function from PDB or CIF files."
-    )
-    
-    # 2. Define allowed arguments
-    parser.add_argument(
-        "-d", "--data", 
-        type=str, 
-        required=True, 
-        help="Path to the folder containing structure files (e.g. 'rna_data/pdb')"
-    )
-    
-    parser.add_argument(
-        "-f", "--format", 
-        type=str, 
-        choices=['pdb', 'cif'], 
-        default='pdb',
-        help="The file format to use for training (pdb or cif). Default is pdb."
-    )
-    
-    # 3. Parse arguments
-    args = parser.parse_args()
-    
-    # 4. Validate Directory
-    if not os.path.isdir(args.data):
-        print(f"Error: Directory '{args.data}' does not exist.")
-        sys.exit(1)
-
-    # 5. Find files based on user choice
-    # Case insensitive search for extension
-    search_pattern = os.path.join(args.data, f"*.{args.format}")
-    found_files = glob.glob(search_pattern)
-    
-    # Also try uppercase (e.g., .PDB or .CIF) just in case
-    if len(found_files) == 0:
-         search_pattern_upper = os.path.join(args.data, f"*.{args.format.upper()}")
-         found_files = glob.glob(search_pattern_upper)
-
-    if len(found_files) == 0:
-        print(f"No files ending in .{args.format} found in {args.data}")
-        sys.exit(1)
-
-    print(f"Training on {len(found_files)} {args.format.upper()} files from {args.data}...")
-    
-    # 6. Run Training
-    scores = train_objective_function(found_files)
-    save_scores(scores)
