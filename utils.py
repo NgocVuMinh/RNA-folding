@@ -1,6 +1,4 @@
-
-
-
+import os
 
 def get_pair_name(res1, res2):
     """
@@ -9,7 +7,6 @@ def get_pair_name(res1, res2):
     """
     sorted_pair = sorted([res1, res2])
     return f"{sorted_pair[0]}{sorted_pair[1]}"
-
 
 def save_scores(scores_dict, output_dir="outputs"):
     if not os.path.exists(output_dir):
