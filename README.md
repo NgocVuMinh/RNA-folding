@@ -110,8 +110,7 @@ Parameters:
 
 Example plots:
 
-<img src="plots/hist/bin1/plot_GG.png" width="250"/>
-<img src="plots/hist/bin1/plot_AA.png" width="250"/>
+<img src="plots/hist/bin1/plot_GG.png" width="300"/> <img src="plots/hist/bin1/plot_AA.png" width="300"/>
 
 
 ### 4. Scoring on a given structure 
