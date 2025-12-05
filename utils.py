@@ -1,6 +1,8 @@
 # utils.py
 import os
 import argparse
+import numpy as np
+import matplotlib.pyplot as plt
 
 def get_pair_name(res1, res2):
     """
@@ -41,3 +43,39 @@ def parse_bandwidth(x):
         return float(x)
     except ValueError:
         raise argparse.ArgumentTypeError("Bandwidth must be a float or 'scott'/'silverman'.")
+    
+
+def plot_distributions(pair_counts, ref_counts, bin_size, min_dist, max_dist, plot_dist_dir):
+    """
+    Plot individual histograms for each pair + the reference histogram.
+    """
+    if not os.path.exists(plot_dist_dir):
+        os.makedirs(plot_dist_dir)
+
+    num_bins = len(ref_counts)
+    # bin_edges = np.arange(min_dist, max_dist + bin_size, bin_size)
+    bin_centers = min_dist + np.arange(num_bins) * bin_size # bin_edges[:-1] + bin_size/2
+
+    # XX
+    plt.figure(figsize=(6, 4))
+    plt.bar(bin_centers, ref_counts, width=bin_size*0.9)
+    plt.xlabel("Distance (Å)")
+    plt.ylabel("Count")
+    plt.title("Reference (XX)")
+    plt.tight_layout()
+    # plt.show()
+    plt.savefig(os.path.join(plot_dist_dir, "XX.png"), dpi=300)
+    plt.close()
+
+    # Pairs
+    for pair, counts in pair_counts.items():
+        pname="".join(pair)
+        plt.figure(figsize=(6, 4))
+        plt.bar(bin_centers, counts, width=bin_size * 0.9)
+        plt.xlabel("Distance (Å)")
+        plt.ylabel("Count")
+        plt.title(f"{pair}")
+        plt.tight_layout()
+        #plt.show()
+        plt.savefig(os.path.join(plot_dist_dir, f"{pname}.png"), dpi=300)
+        plt.close()
