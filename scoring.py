@@ -129,4 +129,4 @@ if __name__ == "__main__":
     
     if results:
         print(f"Structure: {results['structure']}")
-        print(f"\nEstimated Gibbs free energy: {results['total_energy']:.3f}")
+        print(f"Estimated Gibbs free energy: {results['total_energy']:.3f}")
