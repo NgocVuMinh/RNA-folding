@@ -22,7 +22,7 @@ def is_strict_pure_rna(chain):
             
     return True
 
-def get_all_distances(model, atom_name="C3'", max_distance=20.0, min_distance=3):
+def get_all_distances(model, atom_name="C3'", max_distance=20.0, seq_sep=3):
     """
     Calculates pairwise distances for clean RNA chains.
     
@@ -30,7 +30,7 @@ def get_all_distances(model, atom_name="C3'", max_distance=20.0, min_distance=3)
         model: Bio.PDB Model object.
         atom_name (str): Atom to measure (default C3').
         max_distance (float): Cutoff for interaction (default 20A).
-        min_distance (int): Sequence separation cutoff. 
+        seq_sep (int): Sequence separation cutoff. 
                             If 3, discards i to i+3, keeps i to i+4.
     """
     interactions = []
@@ -56,26 +56,29 @@ def get_all_distances(model, atom_name="C3'", max_distance=20.0, min_distance=3)
                     "atom": atom
                 })
 
-    # 2. Compute Distances
+    # 2. Compute distances
     count = len(valid_atoms)
     for i in range(count):
-        for j in range(i + 1, count):
+        for j in range(i + seq_sep, count): # skip 3 neighbors
             atom_A = valid_atoms[i]
             atom_B = valid_atoms[j]
             
             # --- FILTER: Sequence Separation ---
-            if atom_A['chain'] == atom_B['chain']:
-                seq_dist = abs(atom_A['res_num'] - atom_B['res_num'])
+            # if atom_A['chain'] == atom_B['chain']:
+            #     seq_dist = abs(atom_A['res_num'] - atom_B['res_num'])
                 
-                # Instruction: "separated by at least 3 positions"
-                # Logic: If min_dist=3, we skip 1-2, 1-3, 1-4. We keep 1-5 (dist 4).
-                if seq_dist <= min_distance:
-                    continue
-                interaction_type = "Intrachain"
-            else:
-                interaction_type = "Interchain"
+            #     # Instruction: "separated by at least 3 positions"
+            #     # Logic: If min_dist=3, we skip 1-2, 1-3, 1-4. We keep 1-5 (dist 4).
+            #     if seq_dist <= seq_sep:
+            #         continue
+            #     interaction_type = "Intrachain"
+            # else:
+            #     interaction_type = "Interchain"
+            if atom_A['chain'] != atom_B['chain']:
+                continue
+            interaction_type = "Intrachain"
 
-            # --- CALCULATION: Euclidean Distance ---
+            # --- CALCULATION: Euclidean distance ---
             dist = atom_A['atom'] - atom_B['atom']
             
             if dist <= max_distance:

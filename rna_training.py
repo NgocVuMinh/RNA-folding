@@ -10,8 +10,9 @@ from utils import get_pair_name
 def train_objective_function(structure_files, 
                              atom_type="C3'", 
                              mode="histogram", 
-                             bin_size=1.0,
-                             min_dist=3.0, 
+                             #bin_size=1.0,
+                             min_dist=0.0, 
+                             seq_sep=3, # only consider residues separated by at least 3 positions on the sequence 
                              max_dist=20.0,
                              bandwidth="scott"):
     """
@@ -25,20 +26,20 @@ def train_objective_function(structure_files,
     # --- 1. Initialization ---
     if mode == "histogram":
         # Create bins (e.g., 3.0, 4.0, ... 20.0)
-        num_bins = int((max_dist - min_dist) / bin_size) + 1
-        bin_edges = np.linspace(min_dist, max_dist, num_bins)
+        num_bins = int(max_dist) # int((max_dist - min_dist) / bin_size) + 1
+        # bin_edges = np.linspace(min_dist, max_dist, num_bins)
         # Calculate centers for plotting (x-axis)
-        bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+        # bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
         
         pair_counts = {}
         # Reference (XX) counts
-        ref_counts = np.zeros(num_bins - 1, dtype=float)
+        ref_counts = np.zeros(num_bins, dtype=int)
         
         # Initialize dictionary for all 10 pairs
         for i in range(len(valid_bases)):
             for j in range(i, len(valid_bases)):
                 pname = get_pair_name(valid_bases[i], valid_bases[j])
-                pair_counts[pname] = np.zeros(num_bins - 1, dtype=float)
+                pair_counts[pname] = np.zeros(num_bins, dtype=int)
                 
     elif mode == "kernel":
         # Store raw distances for KDE
@@ -49,9 +50,9 @@ def train_objective_function(structure_files,
                 pname = get_pair_name(valid_bases[i], valid_bases[j])
                 pair_raw[pname] = []
 
-    print(f"Training on {len(structure_files)} files (Mode: {mode})...")
+    print(f"Training on {len(structure_files)} structures (atom: {atom_type}, mode: {mode})...")
 
-    # --- 2. Data Collection ---
+    # --- 2. Data collection ---
     total_interactions = 0
     
     for filepath in structure_files:
@@ -60,7 +61,9 @@ def train_objective_function(structure_files,
             continue
         
         interactions = get_all_distances(structure, atom_name=atom_type,
-                                         min_distance=min_dist, max_distance=max_dist)
+                                         # min_distance=min_dist,
+                                         max_distance=max_dist,
+                                         seq_sep=seq_sep)
         
         for item in interactions:
             # Training uses Intrachain only
@@ -76,7 +79,7 @@ def train_objective_function(structure_files,
             
             if mode == "histogram":
                 # Find which bin this distance falls into
-                bin_idx = np.searchsorted(bin_edges, dist) - 1
+                bin_idx = int(math.floor(dist)) #np.searchsorted(bin_edges, dist) - 1
                 if 0 <= bin_idx < len(ref_counts):
                     pair_counts[pname][bin_idx] += 1
                     ref_counts[bin_idx] += 1
@@ -109,8 +112,8 @@ def train_objective_function(structure_files,
             
             if total_pair == 0:
                 # No data for this pair -> Max penalty
-                final_scores[pair] = {'distances': bin_centers.tolist(), 
-                                      'scores': [10.0] * len(bin_centers)}
+                final_scores[pair] = {'distances': list(range(num_bins)), 
+                                      'scores': [10.0] * len(num_bins)}
                 continue
             
             freq_obs = counts / total_pair
@@ -126,7 +129,7 @@ def train_objective_function(structure_files,
             
             # FIX: Return dictionary matching KDE format
             final_scores[pair] = {
-                'distances': bin_centers.tolist(),
+                'distances': list(range(num_bins)),
                 'scores': scores
             }
 
@@ -151,7 +154,6 @@ def train_objective_function(structure_files,
             obs_pdf = pair_kde(eval_points)
             obs_pdf = np.maximum(obs_pdf, 1e-10)
             
-            # Vectorized scoring
             scores = -np.log(obs_pdf / ref_pdf)
             
             final_scores[pair] = {

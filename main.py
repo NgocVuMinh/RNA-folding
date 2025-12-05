@@ -6,7 +6,7 @@ import sys
 from rna_training import train_objective_function
 from utils import save_scores
 
-# 1. Setup Arguments
+# 1. Setup arguments
 parser = argparse.ArgumentParser(description="Train an RNA objective function.")
 
 parser.add_argument("-d", "--data", type=str, required=True, 
@@ -19,20 +19,20 @@ parser.add_argument("-m", "--mode", type=str, choices=["histogram", "kernel"], d
                     help="Scoring mode: 'histogram' or 'kernel' (default: histogram)")
 parser.add_argument("-o", "--out_dir", type=str, default="potentials",
                     help="Output folder (default: potentials)")
-# Advanced Options
-parser.add_argument("-b", "--bin_size", type=float, default=1.0, help="Histogram bin size")
-parser.add_argument("--min_dist", type=float, default=3.0, help="Min distance (A)")
+# Advanced options
+# parser.add_argument("-b", "--bin_size", type=float, default=1.0, help="Histogram bin size")
+parser.add_argument("--min_dist", type=float, default=0.0, help="Min distance (A)")
 parser.add_argument("--max_dist", type=float, default=20.0, help="Max distance (A)")
 
 args = parser.parse_args()
 
 if __name__ == "__main__":
-    # 2. Check Input Directory
+    # 2. Check input directory
     if not os.path.isdir(args.data):
         print(f"Error: Directory '{args.data}' not found.")
         sys.exit(1)
 
-    # 3. Find Files
+    # 3. Find files
     pattern = os.path.join(args.data, f"*.{args.format}")
     found_files = glob.glob(pattern)
     
@@ -45,7 +45,7 @@ if __name__ == "__main__":
         print(f"No .{args.format} files found in {args.data}")
         sys.exit(1)
 
-    # 4. Run Training
+    # 4. Run training
     print(f"Starting training on {len(found_files)} files...")
     
     try:
@@ -53,12 +53,12 @@ if __name__ == "__main__":
             found_files, 
             atom_type=args.atom, 
             mode=args.mode, 
-            bin_size=args.bin_size, 
-            max_dist=args.max_dist,
-            min_dist=args.min_dist
+            #bin_size=args.bin_size, 
+            max_dist=args.max_dist
+            #min_dist=args.min_dist
         )
         
-        # 5. Save Results
+        # 5. Save results
         save_scores(scores, output_dir=args.out_dir)
         print("Done.")
         
