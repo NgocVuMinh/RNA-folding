@@ -10,7 +10,6 @@
 - Minh Ngoc VU  
 - Erine BENOIST
 
----
 
 ## Overview
 
@@ -20,9 +19,9 @@ The goal of this project is to develop an objective function (scoring function) 
 
 Our scoring function is a statistical potential derived from experimentally determined RNA structures. It relies on the inverse Boltzmann principle, calculating pseudo-energies based on the frequency of atomic interactions observed in nature.
 
----
 
-## Installation & Requirements
+
+## Installation & requirements
 
 The project was developed using python 3.12.
 
@@ -36,15 +35,16 @@ pip install biopython numpy scipy matplotlib
 
 ### 2. Project structure
 
-- **main.py** — Central entry point, handles CLI arguments and orchestrates the training process  
-- **rna_loader.py** — Parses PDB and CIF files using BioPython  
-- **rna_distance.py** — Computes Euclidean distances and filters invalid/non-RNA chains  
-- **rna_training.py** — Core statistical potential logic (Histograms + KDE)  
-- **rna_plot.py** — Plot profiles
-- **rna_downloader.py** — Downloads structures via the RCSB PDB API  
-- **utils.py** — Helper functions (file saving, formatting)
+- `train.py` — Central entry point, handles CLI arguments and orchestrates the training process  
+- `plot.py` — Plot profiles
+- `scoring.py` — Scoring on a given structure
+- `rna_loader.py` — Parses PDB and CIF files using BioPython  
+- `rna_distance.py` — Computes Euclidean distances and filters invalid/non-RNA chains  
+- `rna_training.py` — Core statistical potential logic (Histograms + KDE)  
+- `rna_downloader.py` — Downloads structures via the RCSB PDB API  
+- `utils.py` — Helper functions (file saving, formatting, etc.)
 
----
+
 
 ## Usage
 
@@ -59,24 +59,25 @@ This will create an `rna_data/` folder containing PDB and mmCIF files.
 
 For training, we obtained 114 RNA structures from *Homo sapiens* via the [RCSB PDB REST API](https://www.rcsb.org/docs/programmatic-access/web-apis-overview). Each structure was downloaded in both PDB and CIF format.
 
----
+
 
 ### 2. Training the objective function
 
 #### Basic usage
 
-Using histograms:
+Using histograms with bin_size=1
 
 ```bash
-python train.py --data data/pdb --format pdb --out_dir potentials
+python train.py --data data/pdb --format pdb --out_dir profiles/hist/bin1
 ```
 
 #### Advanced usage
 
 Kernel Density Estimation is still being developed. Users can specify atom of choice and mmCIF format. The project currently supports single-atom distances.
 
+Using KDE with bandwidth=0.1:
 ```bash
-python train.py --data data/cif --format cif --mode kernel --atom "C3'" --out_dir out_kde
+python train.py --data data/cif --format cif --mode kernel --atom "C3'" --out_dir profiles/kde/bw0.1 --bandwidth 0.1
 ```
 
 | Argument | Description | Default |
@@ -85,29 +86,31 @@ python train.py --data data/cif --format cif --mode kernel --atom "C3'" --out_di
 | `-f, --format` | File format (`pdb` or `cif`) | pdb |
 | `-m, --mode` | Calculation method (`histogram` or `kernel`) | histogram |
 | `-a, --atom` | Atom used for distance calculation | C3' |
+| `-o, --out_dir` | Output directory | profiles |
 | `--max_dist` | Maximum distance threshold (Å) | 20.0 |
-| `-o, --out_dir` | Output directory | potentials |
+| `--bin_size` | Histogram bin size | 1 |
+| `--bandwidth` | Bandwith for KDE (either scalar, "scott" or "silverman") | 0.1 |
 
----
+
 
 ### 3. Plot interaction profiles
 
 ```bash
-python plot.py --input out_hist --output plots_hist
+python plot.py --input profiles/hist/bin1 --output plots/hist/bin1
 ```
 
 Parameters:  
 - `--input` : Folder containing .txt scoring files
 - `--output`: Folder where .png plots will be saved  
 
----
+
 
 ### 4. Scoring on a given structure 
 
 Scoring based on histograms are supported. KDE is still being developed.
 
 ```bash
-python scoring.py --structure_dir data/pdb/1A3M.pdb --profile_dir out_hist
+python scoring.py --structure_dir data/pdb/1AL5.pdb --profile_dir profiles/hist/bin1
 ```
 
 Parameters:  
@@ -115,7 +118,7 @@ Parameters:
 - `--profile_dir`: path to where the profiles are stored 
 
 
----
+
 
 ## Methodology
 
@@ -132,7 +135,7 @@ Parameters:
 
 Only **pure RNA chains** are kept for training.
 
----
+
 
 ### 2. Distance calculation
 
@@ -140,28 +143,26 @@ We define an “interaction” as:
 
 - Measured between **C3' atoms**  
 - Only **intrachain** interactions  
-- Residue separation ≥ 3 positions:  
-
-\[
-|i - j| > 3
-\]
+- Residue separation ≥ 3 positions
 
 This avoids trivial backbone-local interactions.
 
----
+
 
 ### 3. The objective function
 
 The statistical potential is computed using the inverse Boltzmann principle:
 
-\[
+
+
+$$
 u(r) = -\log\left(\frac{f_{ij}^{Obs}(r)}{f_{XX}^{Ref}(r)}\right)
-\]
+$$
 
 Where:
 
-- \( f_{ij}^{Obs}(r) \): Observed probability of interacting pair \(i-j\) at distance \(r\)  
-- \( f_{XX}^{Ref}(r) \): Reference state probability (any pair at distance \(r\))  
+- $f_{ij}^{Obs}(r)$: Observed probability of interacting pair $i-j$ at distance $r$
+- $f_{XX}^{Ref}(r)$: Reference state probability (any pair at distance $r$)
 
 **Interpretation of the score:**
 
