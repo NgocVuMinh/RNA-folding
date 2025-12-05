@@ -4,7 +4,7 @@ import glob
 import argparse
 import sys
 from rna_training import train_objective_function
-from utils import save_scores
+from utils import save_scores, parse_bandwidth
 
 # 1. Setup arguments
 parser = argparse.ArgumentParser(description="Train an RNA objective function.")
@@ -21,7 +21,7 @@ parser.add_argument("-o", "--out_dir", type=str, default="potentials",
                     help="Output folder (default: potentials)")
 # Advanced options
 parser.add_argument("-b", "--bin_size", type=float, default=1.0, help="Histogram bin size")
-parser.add_argument("-bw", "--bandwidth", default=1.0, help="Bandwith for KDE")
+parser.add_argument("-bw", "--bandwidth", type=parse_bandwidth, default=1.0, help="Bandwith for KDE")
 parser.add_argument("--min_dist", type=float, default=0.0, help="Min distance (A)")
 parser.add_argument("--max_dist", type=float, default=20.0, help="Max distance (A)")
 
