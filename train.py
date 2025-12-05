@@ -22,7 +22,7 @@ parser.add_argument("-o", "--out_dir", type=str, default="potentials",
 # Advanced options
 parser.add_argument("-b", "--bin_size", type=float, default=1.0, help="Histogram bin size")
 parser.add_argument("-bw", "--bandwidth", type=parse_bandwidth, default=1.0, help="Bandwith for KDE")
-parser.add_argument("--min_dist", type=float, default=0.0, help="Min distance (A)")
+# parser.add_argument("--min_dist", type=float, default=0.0, help="Min distance (A)")
 parser.add_argument("--max_dist", type=float, default=20.0, help="Max distance (A)")
 
 args = parser.parse_args()
@@ -56,8 +56,8 @@ if __name__ == "__main__":
                 atom_type=args.atom, 
                 mode=args.mode, 
                 bin_size=args.bin_size, 
-                max_dist=args.max_dist,
-                min_dist=args.min_dist
+                max_dist=args.max_dist
+                # min_dist=args.min_dist
             )
             
             # 5. Save results
@@ -73,8 +73,8 @@ if __name__ == "__main__":
                 atom_type=args.atom, 
                 mode=args.mode, 
                 bandwidth=args.bandwidth, 
-                max_dist=args.max_dist,
-                min_dist=args.min_dist
+                max_dist=args.max_dist
+                # min_dist=args.min_dist
             )
         
             save_scores(scores, output_dir=args.out_dir)

@@ -11,7 +11,7 @@ def train_objective_function(structure_files,
                              atom_type="C3'", 
                              mode="histogram", 
                              bin_size=1.0,
-                             min_dist=0.0, 
+                             # min_dist=0.0, 
                              seq_sep=3, # only consider residues separated by at least 3 positions on the sequence 
                              max_dist=20.0,
                              bandwidth="scott"):
