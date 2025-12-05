@@ -17,8 +17,8 @@ parser.add_argument("-a", "--atom", type=str, default="C3'",
                     help="Atom name (default: C3')")
 parser.add_argument("-m", "--mode", type=str, choices=["histogram", "kernel"], default="histogram",
                     help="Scoring mode: 'histogram' or 'kernel' (default: histogram)")
-parser.add_argument("-o", "--out_dir", type=str, default="potentials",
-                    help="Output folder (default: potentials)")
+parser.add_argument("-o", "--out_dir", type=str, default="profiles",
+                    help="Output folder (default: profiles)")
 # Advanced options
 parser.add_argument("-b", "--bin_size", type=float, default=1.0, help="Histogram bin size")
 parser.add_argument("-bw", "--bandwidth", type=parse_bandwidth, default=1.0, help="Bandwith for KDE")
