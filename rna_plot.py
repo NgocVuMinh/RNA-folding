@@ -17,8 +17,7 @@ def plot_profiles(input_dir, output_dir):
         os.makedirs(output_dir)
         print(f"Created output folder: {output_dir}")
 
-    # The 10 standard base pairs to look for
-    pairs = ["AA", "AU", "AC", "AG", "UU", "UC", "UG", "CC", "CG", "GG"]
+    pairs = ["AA", "AU", "AC", "AG", "UU", "CU", "GU", "CC", "CG", "GG"]
     
     # Store data to make a summary plot later
     all_data = {}
@@ -49,14 +48,14 @@ def plot_profiles(input_dir, output_dir):
             all_data[pair] = (distances, scores)
 
             # 3. Plot Individual Curve
-            plt.figure(figsize=(8, 6))
-            plt.plot(distances, scores, label=f"{pair} Interaction", color='blue', linewidth=2)
+            plt.figure(figsize=(6, 4))
+            plt.plot(distances, scores, label=f"{pair} interaction", color='blue', linewidth=2)
             
             # Formatting
             plt.axhline(0, color='black', linestyle='--', linewidth=1) # Zero energy line
-            plt.title(f"Statistical Potential: {pair}")
+            plt.title(f"Statistical potentials: {pair}")
             plt.xlabel("Distance (Å)")
-            plt.ylabel("Pseudo-Energy Score")
+            plt.ylabel("Pseudo-energy score")
             plt.grid(True, alpha=0.3)
             plt.legend()
             
@@ -69,9 +68,9 @@ def plot_profiles(input_dir, output_dir):
         except Exception as e:
             print(f"Error processing {pair}: {e}")
 
-    # 4. Create Summary Plot (All in one)
+    # 4. Create summary plot (all in one)
     if all_data:
-        plt.figure(figsize=(12, 8))
+        plt.figure(figsize=(10, 6))
         for pair, (dist, scr) in all_data.items():
             plt.plot(dist, scr, label=pair, linewidth=1.5, alpha=0.8)
             
@@ -91,7 +90,7 @@ def plot_profiles(input_dir, output_dir):
         print("No data found to plot.")
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Plot RNA scoring curves from text files.")
+    parser = argparse.ArgumentParser(description="Plot RNA scoring profiles.")
     
     # Arguments
     parser.add_argument("-i", "--input", type=str, required=True, 
