@@ -30,7 +30,7 @@ The project was developed using python 3.12.
 Install the required packages using pip:
 
 ```bash
-pip install biopython numpy scipy matplotlib scikit-learn
+pip install biopython numpy scipy matplotlib scikit-learn rpy2
 ```
 
 ### 2. Project structure
@@ -73,15 +73,19 @@ python train.py --data data/pdb --format pdb --out_dir profiles/hist/bin1
 
 #### Advanced usage
 
-Kernel Density Estimation is still being developed. Users can specify atom of choice and mmCIF format. The project currently supports single-atom distances.
+Kernel Density Estimation is applied using R's `stats.density` imported to Python via the `rpy2` package. 
 
-Using KDE with bandwidth=0.1:
+Users can also specify atom of choice and mmCIF format. The project currently supports single-atom distances.
+
+Using KDE with bandwidth="SJ":
 ```bash
-python train.py --data data/cif --format cif --atom "C3'" --mode kernel --kernel_type gaussian --bandwidth 0.1 --out_dir profiles/kde/gaussian/bw0.1 
+python train.py --data data/cif --format cif --atom "C3'" --mode kernel --kernel_type triangular --bandwidth 0.1 --out_dir profiles/kde/triangular/SJ 
+
+python train.py --data data/pdb --format pdb --atom "C3'" --mode kernel --kernel_type gaussian --bandwidth "SJ" --out_dir profiles/kde/gaussian/SJ 
 ```
 
 | Argument | Description | Default |
-|---------|-------------|---------|
+|----------------|-------------|---------|
 | `-d, --data` | Path to structure folder | **Required** |
 | `-f, --format` | File format (`pdb` or `cif`) | pdb |
 | `-m, --mode` | Calculation method (`histogram` or `kernel`) | histogram |
@@ -89,8 +93,8 @@ python train.py --data data/cif --format cif --atom "C3'" --mode kernel --kernel
 | `-o, --out_dir` | Output directory | profiles |
 | `--max_dist` | Maximum distance threshold (Å) | 20.0 |
 | `--bin_size` | Histogram bin size | 1 |
-| `--bandwidth` | Bandwith for KDE (either scalar, "scott" or "silverman") | 0.1 |
-| `--kernel_type` | Kernel type for KDE ("gaussian", "tophat", "epanechnikov", "exponential", "linear", or "cosine") | "gaussian" |
+| `--bandwidth` | Bandwith for KDE (either scalar, 'nrd0', 'SJ', 'nrd', 'ucv', or 'bcv') | "SJ" |
+| `--kernel_type` | Kernel type for KDE ("gaussian", "rectangular", "triangular", "epanechnikov", "biweight", "cosine", "optcosine", "gaussian") | "gaussian" |
 
 
 
@@ -104,20 +108,35 @@ Parameters:
 - `--input` : Folder containing .txt scoring files
 - `--output`: Folder where .png plots will be saved  
 
+Example plots:
+
+<img src="plots/hist/bin1/plot_GG.png" width="400"/>
+<img src="plots/hist/bin1/plot_AA.png" width="400"/>
 
 
 ### 4. Scoring on a given structure 
 
-Scoring based on histograms are supported. KDE is still being developed.
+Scoring based on the trained profiles (histograms and KDE). We can compare the estimated scores produced by 2 different profiles: 
 
 ```bash
 python scoring.py --structure_dir data/pdb/1AL5.pdb --profile_dir profiles/hist/bin1
-```
 
+python scoring.py --structure_dir data/pdb/1AL5.pdb --profile_dir profiles/kde/gaussian/SJ
+```
 Parameters:  
 - `--structure_dir`: RNA structure file in PDB or mmCIF
 - `--profile_dir`: path to where the profiles are stored 
 
+Results: 
+```bash
+Reading profiles from 'profiles/hist/bin1'...
+Structure: data/pdb/1AL5.pdb
+Estimated Gibbs free energy: -0.200
+
+Reading profiles from 'profiles/kde/gaussian/SJ'...
+Structure: data/pdb/1AL5.pdb
+Estimated Gibbs free energy: -0.141
+```
 
 
 
