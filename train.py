@@ -21,7 +21,7 @@ parser.add_argument("-o", "--out_dir", type=str, default="profiles",
                     help="Output folder (default: profiles)")
 # Advanced options
 parser.add_argument("-b", "--bin_size", type=float, default=1.0, help="Histogram bin size")
-parser.add_argument("-bw", "--bandwidth", type=parse_bandwidth, default=1.0, help="Bandwith for KDE")
+parser.add_argument("-bw", "--bandwidth", type=parse_bandwidth, default=0.1, help="Bandwith for KDE")
 # parser.add_argument("--min_dist", type=float, default=0.0, help="Min distance (A)")
 parser.add_argument("--max_dist", type=float, default=20.0, help="Max distance (A)")
 
