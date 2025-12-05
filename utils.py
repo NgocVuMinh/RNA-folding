@@ -1,4 +1,3 @@
-# utils.py
 import os
 
 def get_pair_name(res1, res2):

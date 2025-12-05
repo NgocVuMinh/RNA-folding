@@ -1,4 +1,3 @@
-# rna_training.py
 import numpy as np
 import math
 import os

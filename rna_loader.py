@@ -1,4 +1,3 @@
-# rna_loader.py
 import os
 import sys
 from Bio.PDB import PDBParser, MMCIFParser

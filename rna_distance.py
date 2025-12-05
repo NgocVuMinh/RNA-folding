@@ -1,4 +1,3 @@
-# rna_distance.py
 from Bio.PDB import Entity
 
 # Standard RNA nucleotides
