@@ -10,7 +10,7 @@ from utils import get_pair_name
 def train_objective_function(structure_files, 
                              atom_type="C3'", 
                              mode="histogram", 
-                             #bin_size=1.0,
+                             bin_size=1.0,
                              min_dist=0.0, 
                              seq_sep=3, # only consider residues separated by at least 3 positions on the sequence 
                              max_dist=20.0,
@@ -26,7 +26,7 @@ def train_objective_function(structure_files,
     # --- 1. Initialization ---
     if mode == "histogram":
         # Create bins (e.g., 3.0, 4.0, ... 20.0)
-        num_bins = int(max_dist) # int((max_dist - min_dist) / bin_size) + 1
+        num_bins = int((max_dist - min_dist) / bin_size) + 1 # int(max_dist)
         # bin_edges = np.linspace(min_dist, max_dist, num_bins)
         # Calculate centers for plotting (x-axis)
         # bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
