@@ -3,7 +3,7 @@ import os
 import glob
 import argparse
 import sys
-from rna_training import train_objective_function
+from rna_training import train_objective_function_kernel, train_objective_function_histogram
 from utils import save_scores, parse_bandwidth
 
 # 1. Setup arguments
@@ -21,10 +21,11 @@ parser.add_argument("-o", "--out_dir", type=str, default="profiles",
                     help="Output folder (default: profiles)")
 # Advanced options
 parser.add_argument("-b", "--bin_size", type=float, default=1.0, help="Histogram bin size")
-parser.add_argument("-bw", "--bandwidth", type=parse_bandwidth, default=0.1, help="Bandwith for KDE")
-parser.add_argument("-ktype", "--kernel_type", choices=["gaussian", "tophat", "epanechnikov", "exponential", "linear", "cosine"], default="gaussian", help="Kernel for KDE")
+parser.add_argument("-bw", "--bandwidth", type=parse_bandwidth, default="SJ", help="Bandwith for KDE")
+parser.add_argument("-ktype", "--kernel_type", choices=["gaussian", "rectangular", "triangular", "epanechnikov", "biweight", "cosine", "optcosine", "gaussian"], default="gaussian", help="Kernel for KDE")
 # parser.add_argument("--min_dist", type=float, default=0.0, help="Min distance (A)")
 parser.add_argument("--max_dist", type=float, default=20.0, help="Max distance (A)")
+
 
 args = parser.parse_args()
 
@@ -52,7 +53,7 @@ if __name__ == "__main__":
     
     if args.mode=="histogram":
         try:
-            scores = train_objective_function(
+            scores = train_objective_function_histogram(
                 found_files, 
                 atom_type=args.atom, 
                 mode=args.mode, 
@@ -69,7 +70,7 @@ if __name__ == "__main__":
 
     elif args.mode=="kernel":
         try:
-            scores = train_objective_function(
+            scores = train_objective_function_kernel(
                 found_files, 
                 atom_type=args.atom, 
                 mode=args.mode, 

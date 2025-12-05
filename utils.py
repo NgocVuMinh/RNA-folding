@@ -37,12 +37,12 @@ def save_scores(scores_dict, output_dir="outputs"):
                 f.write(f"{d:.4f}\t{s:.4f}\n")
 
 def parse_bandwidth(x):
-    if x.lower() in ["scott", "silverman"]:
-        return x.lower()
+    if x in ["nrd0", "SJ", "nrd", "ucv", "bcv"]:
+        return x
     try:
         return float(x)
     except ValueError:
-        raise argparse.ArgumentTypeError("Bandwidth must be a float or 'scott'/'silverman'.")
+        raise argparse.ArgumentTypeError("Bandwidth must be a float or 'nrd0', 'SJ', 'nrd', 'ucv', 'bcv'.")
     
 
 def plot_distributions(pair_counts, ref_counts, bin_size, min_dist, max_dist, plot_dist_dir):
