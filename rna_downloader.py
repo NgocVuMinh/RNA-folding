@@ -9,7 +9,7 @@ import time
 
 
 class PDBRNADownloader:
-    def __init__(self, output_dir="rna", file_format="cif", organism="Homo sapiens"):
+    def __init__(self, output_dir="data", file_format="cif", organism="Homo sapiens"):
         self.output_dir = output_dir
         self.format = file_format
         self.organism = organism
@@ -153,7 +153,7 @@ class PDBRNADownloader:
 
 if __name__ == "__main__":
     downloader = PDBRNADownloader(
-        output_dir="rna_data/pdb",
+        output_dir="data/pdb",
         file_format="pdb" 
     )
     
@@ -167,7 +167,7 @@ if __name__ == "__main__":
     # !!! RUN THIS FIRST:
     # ls -1 rna_data/pdb | sed -e 's/\..*$//' > data20.txt
     downloader_cif = PDBRNADownloader(
-        output_dir="rna_data/cif",
+        output_dir="data/cif",
         file_format="cif" 
     )
     downloader_cif.download_from_file('data50.txt')
