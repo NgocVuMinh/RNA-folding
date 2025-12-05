@@ -2,10 +2,11 @@
 import numpy as np
 import math
 import os
-from scipy.stats import gaussian_kde
+# from scipy.stats import gaussian_kde
+from sklearn.neighbors import KernelDensity
 from rna_loader import load_rna_structure
 from rna_distance import get_all_distances
-from utils import get_pair_name
+from utils import get_pair_name, plot_distributions
 
 def train_objective_function(structure_files, 
                              atom_type="C3'", 
@@ -14,6 +15,9 @@ def train_objective_function(structure_files,
                              min_dist=0.0, 
                              seq_sep=3, # only consider residues separated by at least 3 positions on the sequence 
                              max_dist=20.0,
+                             plot_dist=True,
+                             plot_dist_dir="distance_distributions",
+                             kernel_type="gaussian",
                              bandwidth="scott"):
     """
     Trains the statistical potential using PDB/CIF files.
@@ -50,7 +54,10 @@ def train_objective_function(structure_files,
                 pname = get_pair_name(valid_bases[i], valid_bases[j])
                 pair_raw[pname] = []
 
-    print(f"Training on {len(structure_files)} structures (atom: {atom_type}, mode: {mode})...")
+    if mode=="histogram":
+        print(f"Training on {len(structure_files)} structures (atom: {atom_type}, mode: {mode}, bin_size={bin_size}, min_dist={min_dist}, max_dist={max_dist})")
+    elif mode == "kernel":
+        print(f"Training on {len(structure_files)} structures (atom: {atom_type}, mode: {mode}, kernel_type={kernel_type}, bandwidth={bandwidth})")
 
     # --- 2. Data collection ---
     total_interactions = 0
@@ -90,6 +97,10 @@ def train_objective_function(structure_files,
                 pair_raw[pname].append(dist)
                 ref_raw.append(dist)
                 total_interactions += 1
+
+    if mode == "histogram" and plot_dist:
+        plot_distributions(pair_counts, ref_counts, bin_size, min_dist, max_dist, plot_dist_dir)
+        print(f"Distance distributions saved to {plot_dist_dir}.")
 
     if total_interactions == 0:
         print("Warning: No valid interactions found.")
@@ -140,9 +151,15 @@ def train_objective_function(structure_files,
             return {}
             
         # Reference KDE (XX)
-        ref_kde = gaussian_kde(ref_raw, bw_method=bandwidth)
+        # ref_kde = gaussian_kde(ref_raw, bw_method=bandwidth)
+        # eval_points = np.linspace(min_dist, max_dist, 200)
+        # ref_pdf = ref_kde(eval_points)
+        ref_counts_array = np.array(ref_counts).reshape(-1, 1)
+        ref_kde = KernelDensity(kernel="gaussian", bandwidth=bandwidth).fit(ref_counts_array)
         eval_points = np.linspace(min_dist, max_dist, 200)
-        ref_pdf = ref_kde(eval_points)
+        eval_points_2d = eval_points.reshape(-1, 1)  # 2D input
+        ref_log_pdf = ref_kde.score_samples(eval_points_2d) # returns log-density
+        ref_pdf = np.exp(ref_log_pdf)
         ref_pdf = np.maximum(ref_pdf, 1e-6) # Avoid 0
         
         for pair, dist_values in pair_raw.items():
@@ -152,8 +169,12 @@ def train_objective_function(structure_files,
                 continue
             
             # Pair KDE (XY)
-            pair_kde = gaussian_kde(dist_values, bw_method=bandwidth)
-            obs_pdf = pair_kde(eval_points)
+            # pair_kde = gaussian_kde(dist_values, bw_method=bandwidth)
+            # obs_pdf = pair_kde(eval_points)
+            dist_array = np.array(dist_values).reshape(-1, 1)
+            pair_kde = KernelDensity(kernel=kernel_type, bandwidth=bandwidth).fit(dist_array)
+            obs_log_pdf = pair_kde.score_samples(eval_points_2d)
+            obs_pdf = np.exp(obs_log_pdf)
             obs_pdf = np.maximum(obs_pdf, 1e-6)
             
             scores = -np.log(obs_pdf / ref_pdf)
