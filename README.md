@@ -68,7 +68,7 @@ For training, we obtained 114 RNA structures from *Homo sapiens* via the [RCSB P
 Using histograms:
 
 ```bash
-python main.py --data rna_data/pdb --format pdb --out_dir potentials
+python train.py --data data/pdb --format pdb --out_dir potentials
 ```
 
 #### Advanced usage
@@ -76,7 +76,7 @@ python main.py --data rna_data/pdb --format pdb --out_dir potentials
 Kernel Density Estimation is still being developed. Users can specify atom of choice and mmCIF format. The project currently supports single-atom distances.
 
 ```bash
-python main.py --data rna_data/cif --format cif --mode kernel --atom "C3'" --out_dir out_kde
+python train.py --data data/cif --format cif --mode kernel --atom "C3'" --out_dir out_kde
 ```
 
 | Argument | Description | Default |
@@ -93,7 +93,7 @@ python main.py --data rna_data/cif --format cif --mode kernel --atom "C3'" --out
 ### 3. Plot interaction profiles
 
 ```bash
-python rna_plot.py --input potentials --output plots
+python plot.py --input out_hist --output plots_hist
 ```
 
 Parameters:  
@@ -107,7 +107,7 @@ Parameters:
 Scoring based on histograms are supported. KDE is still being developed.
 
 ```bash
-python scoring.py --structure_dir rna_data/pdb/1A3M.pdb --profile_dir out_hist
+python scoring.py --structure_dir data/pdb/1A3M.pdb --profile_dir out_hist
 ```
 
 Parameters:  
