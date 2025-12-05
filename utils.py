@@ -1,5 +1,6 @@
 # utils.py
 import os
+import argparse
 
 def get_pair_name(res1, res2):
     """
@@ -32,3 +33,11 @@ def save_scores(scores_dict, output_dir="outputs"):
         with open(filename, "w") as f:
             for d, s in zip(dists, scores):
                 f.write(f"{d:.4f}\t{s:.4f}\n")
+
+def parse_bandwidth(x):
+    if x.lower() in ["scott", "silverman"]:
+        return x.lower()
+    try:
+        return float(x)
+    except ValueError:
+        raise argparse.ArgumentTypeError("Bandwidth must be a float or 'scott'/'silverman'.")
