@@ -30,7 +30,7 @@ The project was developed using python 3.12.
 Install the required packages using pip:
 
 ```bash
-pip install biopython numpy scipy matplotlib
+pip install biopython numpy scipy matplotlib scikit-learn
 ```
 
 ### 2. Project structure
@@ -77,7 +77,7 @@ Kernel Density Estimation is still being developed. Users can specify atom of ch
 
 Using KDE with bandwidth=0.1:
 ```bash
-python train.py --data data/cif --format cif --mode kernel --atom "C3'" --out_dir profiles/kde/bw0.1 --bandwidth 0.1
+python train.py --data data/cif --format cif --atom "C3'" --mode kernel --kernel_type gaussian --bandwidth 0.1 --out_dir profiles/kde/gaussian/bw0.1 
 ```
 
 | Argument | Description | Default |
@@ -90,6 +90,7 @@ python train.py --data data/cif --format cif --mode kernel --atom "C3'" --out_di
 | `--max_dist` | Maximum distance threshold (Å) | 20.0 |
 | `--bin_size` | Histogram bin size | 1 |
 | `--bandwidth` | Bandwith for KDE (either scalar, "scott" or "silverman") | 0.1 |
+| `--kernel_type` | Kernel type for KDE ("gaussian", "tophat", "epanechnikov", "exponential", "linear", or "cosine") | "gaussian" |
 
 
 
