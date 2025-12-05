@@ -26,7 +26,7 @@ def train_objective_function(structure_files,
     # --- 1. Initialization ---
     if mode == "histogram":
         # Create bins (e.g., 3.0, 4.0, ... 20.0)
-        num_bins = int((max_dist - min_dist) / bin_size) + 1 # int(max_dist)
+        num_bins = int((max_dist - min_dist) / bin_size) # int(max_dist)
         # bin_edges = np.linspace(min_dist, max_dist, num_bins)
         # Calculate centers for plotting (x-axis)
         # bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
@@ -60,7 +60,8 @@ def train_objective_function(structure_files,
         if structure is None:
             continue
         
-        interactions = get_all_distances(structure, atom_name=atom_type,
+        interactions = get_all_distances(structure, 
+                                         atom_name=atom_type,
                                          # min_distance=min_dist,
                                          max_distance=max_dist,
                                          seq_sep=seq_sep)
@@ -113,7 +114,7 @@ def train_objective_function(structure_files,
             if total_pair == 0:
                 # No data for this pair -> Max penalty
                 final_scores[pair] = {'distances': list(range(num_bins)), 
-                                      'scores': [10.0] * len(num_bins)}
+                                      'scores': [10.0] * num_bins}
                 continue
             
             freq_obs = counts / total_pair
@@ -135,13 +136,14 @@ def train_objective_function(structure_files,
 
     elif mode == "kernel":
         if not ref_raw: 
+            print("Warning: reference distance list is empty")
             return {}
             
         # Reference KDE (XX)
-        ref_kde = gaussian_kde(ref_raw, bw_method="scott")
-        eval_points = np.linspace(min_dist, max_dist, 100)
+        ref_kde = gaussian_kde(ref_raw, bw_method=bandwidth)
+        eval_points = np.linspace(min_dist, max_dist, 200)
         ref_pdf = ref_kde(eval_points)
-        ref_pdf = np.maximum(ref_pdf, 1e-10) # Avoid 0
+        ref_pdf = np.maximum(ref_pdf, 1e-6) # Avoid 0
         
         for pair, dist_values in pair_raw.items():
             if len(dist_values) < 2: # Need data points for KDE
@@ -152,7 +154,7 @@ def train_objective_function(structure_files,
             # Pair KDE (XY)
             pair_kde = gaussian_kde(dist_values, bw_method=bandwidth)
             obs_pdf = pair_kde(eval_points)
-            obs_pdf = np.maximum(obs_pdf, 1e-10)
+            obs_pdf = np.maximum(obs_pdf, 1e-6)
             
             scores = -np.log(obs_pdf / ref_pdf)
             
