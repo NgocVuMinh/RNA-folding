@@ -17,6 +17,8 @@ parser.add_argument("-a", "--atom", type=str, default="C3'",
                     help="Atom name (default: C3')")
 parser.add_argument("-m", "--mode", type=str, choices=["histogram", "kernel"], default="histogram",
                     help="Scoring mode: 'histogram' or 'kernel' (default: histogram)")
+parser.add_argument("-formula", "--formula", type=str, choices=["pmf", "tig"], default="tig",
+                    help="Scoring function formula: 'pmf' (potential of mean force) or 'tig' (total information gain) (default: 'tig')")
 parser.add_argument("-o", "--out_dir", type=str, default="profiles",
                     help="Output folder (default: profiles)")
 # Advanced options
@@ -58,7 +60,8 @@ if __name__ == "__main__":
                 atom_type=args.atom, 
                 mode=args.mode, 
                 bin_size=args.bin_size, 
-                max_dist=args.max_dist
+                max_dist=args.max_dist,
+                formula=args.formula
                 # min_dist=args.min_dist
             )
             
@@ -75,7 +78,8 @@ if __name__ == "__main__":
                 atom_type=args.atom, 
                 mode=args.mode, 
                 bandwidth=args.bandwidth, 
-                max_dist=args.max_dist
+                max_dist=args.max_dist,
+                formula=args.formula
                 # min_dist=args.min_dist
             )
         
