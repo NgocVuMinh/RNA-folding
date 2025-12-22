@@ -34,9 +34,8 @@ def train_objective_function_histogram(structure_files,
     # --- 1. Initialization ---
     # Create bins (e.g., 3.0, 4.0, ... 20.0)
     num_bins = int((max_dist - min_dist) / bin_size) # int(max_dist)
-    # bin_edges = np.linspace(min_dist, max_dist, num_bins)
-    # Calculate centers for plotting (x-axis)
-    # bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+    bin_edges = np.arange(min_dist, max_dist + bin_size, bin_size) # np.linspace(min_dist, max_dist, num_bins)
+    bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
     
     pair_counts = {}
     # Reference (XX) counts
@@ -110,7 +109,7 @@ def train_objective_function_histogram(structure_files,
         
         if total_pair == 0:
             # No data for this pair -> Max penalty
-            final_scores[pair] = {'distances': list(range(num_bins)), 
+            final_scores[pair] = {'distances': bin_centers.tolist(), #list(range(num_bins)), 
                                     'scores': [10.0] * num_bins}
             continue
         
@@ -128,7 +127,7 @@ def train_objective_function_histogram(structure_files,
         
         # FIX: Return dictionary matching KDE format
         final_scores[pair] = {
-            'distances': list(range(num_bins)),
+            'distances': bin_centers.tolist(), #list(range(num_bins)),
             'scores': scores
         }
             
