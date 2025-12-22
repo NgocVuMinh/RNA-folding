@@ -61,7 +61,7 @@ def linear_interpol(profiles):
 
 
 def score_structure(structure_file, profile_dir, atom_name="C3'", 
-                   max_distance=20.0, seq_sep=4):
+                   max_distance=20.0, seq_sep=3):
     """Score an RNA structure."""
 
     valid_bases = ['A', 'U', 'C', 'G']
@@ -72,7 +72,7 @@ def score_structure(structure_file, profile_dir, atom_name="C3'",
     interpolators = linear_interpol(profiles)
     
     # Compute distances
-    interactions = get_all_distances(structure, atom_name, max_distance, seq_sep=3)
+    interactions = get_all_distances(structure, atom_name, max_distance, seq_sep=seq_sep)
     
     if len(interactions) == 0:
         print("Warning: No valid interactions found.")
