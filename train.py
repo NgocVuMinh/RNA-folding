@@ -19,13 +19,13 @@ parser.add_argument("-m", "--mode", type=str, choices=["histogram", "kernel"], d
                     help="Scoring mode: 'histogram' or 'kernel' (default: histogram)")
 parser.add_argument("-formula", "--formula", type=str, choices=["pmf", "tig"], default="tig",
                     help="Scoring function formula: 'pmf' (potential of mean force) or 'tig' (total information gain) (default: 'tig')")
-parser.add_argument("-o", "--out_dir", type=str, default="profiles",
+parser.add_argument("-o", "--out_dir", type=str, default=None,
                     help="Output folder (default: profiles)")
 # Advanced options
 parser.add_argument("-b", "--bin_size", type=float, default=1.0, help="Histogram bin size")
 parser.add_argument("-bw", "--bandwidth", type=parse_bandwidth, default="SJ", help="Bandwith for KDE")
 parser.add_argument("-ktype", "--kernel_type", choices=["gaussian", "rectangular", "triangular", "epanechnikov", "biweight", "cosine", "optcosine", "gaussian"], default="gaussian", help="Kernel for KDE")
-# parser.add_argument("--min_dist", type=float, default=0.0, help="Min distance (A)")
+parser.add_argument("--min_dist", type=float, default=0.0, help="Min distance (A)")
 parser.add_argument("--max_dist", type=float, default=20.0, help="Max distance (A)")
 
 
@@ -50,6 +50,16 @@ if __name__ == "__main__":
         print(f"No .{args.format} files found in {args.data}")
         sys.exit(1)
 
+    # Setting output directory:
+    atom_ = args.atom.replace("'", "prime")
+    if args.out_dir is None:
+        if args.mode=="histogram":
+            out_dir = f"profiles/{args.mode}_{args.formula}_{atom_}_bin{args.bin_size}_min{args.min_dist}_max{args.max_dist}"
+        elif args.mode=="kernel":
+            out_dir = f"profiles/{args.mode}_{args.formula}_{atom_}_kernel{args.kernel_type}_bw{args.bandwidth}_min{args.min_dist}_max{args.max_dist}"
+    else:
+        out_dir = args.out_dir
+
     # 4. Run training
     print(f"Starting training on {len(found_files)} files...")
     
@@ -61,12 +71,12 @@ if __name__ == "__main__":
                 mode=args.mode, 
                 bin_size=args.bin_size, 
                 max_dist=args.max_dist,
-                formula=args.formula
-                # min_dist=args.min_dist
+                formula=args.formula,
+                min_dist=args.min_dist
             )
             
             # 5. Save results
-            save_scores(scores, output_dir=args.out_dir)
+            save_scores(scores, output_dir=out_dir)
         
         except Exception as e:
             print(f"Error: {e}")
@@ -78,12 +88,13 @@ if __name__ == "__main__":
                 atom_type=args.atom, 
                 mode=args.mode, 
                 bandwidth=args.bandwidth, 
+                kernel_type=args.kernel_type,
                 max_dist=args.max_dist,
-                formula=args.formula
-                # min_dist=args.min_dist
+                formula=args.formula,
+                min_dist=args.min_dist
             )
         
-            save_scores(scores, output_dir=args.out_dir)
+            save_scores(scores, output_dir=out_dir)
         
         except Exception as e:
             print(f"Error: {e}")
