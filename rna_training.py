@@ -6,7 +6,7 @@ import os
 from sklearn.neighbors import KernelDensity
 from rna_loader import load_rna_structure
 from rna_distance import get_all_distances
-from utils import get_pair_name, plot_distributions
+from utils import get_pair_name, get_scoring_formula, plot_distributions
 
 # to use stats.density from R 
 from rpy2.robjects.packages import importr
@@ -18,6 +18,7 @@ def train_objective_function_histogram(structure_files,
                              mode="histogram", 
                              bin_size=1.0,
                              min_dist=0.0, 
+                             formula="tig",
                              seq_sep=3, # only consider residues separated by at least 3 positions on the sequence 
                              max_dist=20.0,
                              plot_dist=True,
@@ -96,8 +97,9 @@ def train_objective_function_histogram(structure_files,
     
     final_scores = {}
 
-    # --- 3. Scoring (Inverse Boltzmann) ---
-    # Score = -ln( P_obs / P_ref )
+    # --- 3. Scoring ---
+    # PMF or TIG
+    calculate_score = get_scoring_formula(formula)
     
     total_ref = ref_counts.sum()
     freq_ref = ref_counts / total_ref
@@ -117,8 +119,9 @@ def train_objective_function_histogram(structure_files,
         for i in range(len(counts)):
             # Avoid division by zero or log(0)
             if freq_obs[i] > 0 and freq_ref[i] > 0:
-                ratio = freq_obs[i] / freq_ref[i]
-                score = -math.log(ratio)
+                # ratio = freq_obs[i] / freq_ref[i]
+                # score = -math.log(ratio)
+                score = calculate_score(freq_obs[i], freq_ref[i])
                 scores.append(score)
             else:
                 scores.append(10.0) # Penalty for unobserved bins
@@ -136,7 +139,9 @@ def train_objective_function_histogram(structure_files,
 def train_objective_function_kernel(structure_files, 
                              atom_type="C3'", 
                              mode="kernel", 
-                             min_dist=0.0, max_dist=20.0,
+                             min_dist=0.0, 
+                             max_dist=20.0,
+                             formula="tig",
                              seq_sep=3, # only consider residues separated by at least 3 positions on the sequence 
                              kernel_type="gaussian",
                              bandwidth="SJ"):
@@ -198,8 +203,9 @@ def train_objective_function_kernel(structure_files,
     
     final_scores = {}
 
-    # --- 3. Scoring (Inverse Boltzmann) ---
-    # Score = -ln( P_obs / P_ref )
+    # --- 3. Scoring ---
+    # PMF or TIG
+    calculate_score = get_scoring_formula(formula)
     
     if not ref_counts: 
         print("Warning: reference distance list is empty")
@@ -229,7 +235,7 @@ def train_objective_function_kernel(structure_files,
         obs_pdf = np.array(pair_kde.rx2("y"))
         obs_pdf = np.maximum(obs_pdf, 1e-6)
         
-        scores = -np.log(obs_pdf / ref_pdf)
+        scores = calculate_score(obs_pdf, ref_pdf)
         
         final_scores[pair] = {'distances': np.linspace(min_dist, max_dist, 200).tolist(),
                               'scores': scores.tolist()}
