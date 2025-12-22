@@ -235,6 +235,7 @@ def train_objective_function_kernel(structure_files,
         obs_pdf = np.maximum(obs_pdf, 1e-6)
         
         scores = calculate_score(obs_pdf, ref_pdf)
+        scores[np.linspace(min_dist, max_dist, 200) < 2.0] = 10.0 # forcing a max penalty score of 10 to distances < 2.0A
         
         final_scores[pair] = {'distances': np.linspace(min_dist, max_dist, 200).tolist(),
                               'scores': scores.tolist()}
