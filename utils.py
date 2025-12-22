@@ -12,6 +12,20 @@ def get_pair_name(res1, res2):
     sorted_pair = sorted([res1, res2])
     return f"{sorted_pair[0]}{sorted_pair[1]}"
 
+def get_scoring_formula(formula):
+    """
+    Calculates the score given observed 
+    and reference frequencies based on a formula PMF or TIG
+    """
+    if formula.lower() == "pmf":
+        # potential mean of force -ln(obs / ref)
+        return lambda obs, ref: -np.log(obs / ref)
+    elif formula.lower() == "tig":
+        # total information gain: -(obs - ref) / ref
+        return lambda obs, ref: -(obs - ref) / ref
+    else:
+        raise ValueError(f"Unknown formula: {formula}")
+
 def save_scores(scores_dict, output_dir="outputs"):
     """
     Saves scoring profiles to text files.
