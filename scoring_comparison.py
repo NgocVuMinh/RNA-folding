@@ -122,7 +122,7 @@ if __name__ == "__main__":
     parser.add_argument("--profile_dir", type=str, required=True,
                         nargs="+", # allowing multple profiles to be loaded
                         help="Directory containing potential files")
-    parser.add_argument( "--out_dir", type=str, default="scoring_validation",
+    parser.add_argument( "--out_dir", type=str, default="scoring_comparison",
                         help="Output path to store scoring results of multiple profiles on multiple structures.")
     parser.add_argument("--atom_name", type=str, default="C3'",
                         help="Atom name (default: C3')")
@@ -184,7 +184,7 @@ if __name__ == "__main__":
     # --- Ploting the correlation between different profiles (if there are more than 1 profile)
     if len(args.profile_dir) > 1:
         df = pd.DataFrame(energy_results)
-        df = df[df["energy"] > -10]
+        df = df[df["energy"] > -10] # we remove extreme negative scores (potentially of very large structures)
         energy_matrix = df.pivot(index="rna", columns="profile", values="energy")
         
 
@@ -205,7 +205,7 @@ if __name__ == "__main__":
             corr = x.corr(y, method="pearson")
 
             plt.figure(figsize=(4, 4))
-            plt.scatter(x, y, alpha=0.7, s=8, color="black")
+            plt.scatter(x, y, alpha=0.7, s=8, color="crimson")
             plt.xlabel(p1)
             plt.ylabel(p2)
             plt.title(f"Pearson r={corr:.4f}")
