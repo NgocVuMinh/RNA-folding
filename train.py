@@ -54,9 +54,9 @@ if __name__ == "__main__":
     atom_ = args.atom.replace("'", "prime")
     if args.out_dir is None:
         if args.mode=="histogram":
-            out_dir = f"profiles/{args.mode}_{args.formula}_{atom_}_bin{args.bin_size}_min{args.min_dist}_max{args.max_dist}"
+            out_dir = f"profiles/hist_{args.formula}_{atom_}_bin{args.bin_size}"
         elif args.mode=="kernel":
-            out_dir = f"profiles/{args.mode}_{args.formula}_{atom_}_kernel{args.kernel_type}_bw{args.bandwidth}_min{args.min_dist}_max{args.max_dist}"
+            out_dir = f"profiles/kde_{args.formula}_{atom_}_kernel{args.kernel_type}_bw{args.bandwidth}"
     else:
         out_dir = args.out_dir
 
