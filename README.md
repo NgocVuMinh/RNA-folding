@@ -13,8 +13,8 @@
 
 ## Table of content
 - [Overview](#overview)
-- [Developments]{#developments}
-- [Installation & requirements](#installation-&-requirements)
+- [Developments](#developments)
+- [Installation & requirements](#installation--requirements)
 - [Usage](#usage)
   - [Data acquisition](#data-acquisition)
   - [Training the objective function](#training-the-objective-function)
@@ -36,8 +36,7 @@ Our scoring function is a statistical potential derived from experimentally dete
 ## Developments
 - *Dec 4, 2025*: First working version (distance, training with histogram, plotting). Training variables are set as users' input parameters
 - *Dec 5, 2025*: Allowed training with Kernel density estimates with R backend
-- *Dec 22, 2025*: Two scoring functions are now allowed: total information gain (TIG, non-log) and potential mean of force (PMF, log)
-- *Dec 24, 2025*: Added comparative analysis of scoring results based on different profiles
+- *Dec 22, 2025*: Two scoring functions are now allowed: total information gain (TIG, non-log) and potential mean of force (PMF, log). Added comparative analysis of scoring results based on different profiles
 
 
 ## Installation & requirements
