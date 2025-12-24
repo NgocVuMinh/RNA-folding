@@ -64,19 +64,19 @@ def get_all_distances(model, atom_name="C3'", max_distance=20.0, seq_sep=3):
             atom_B = valid_atoms[j]
             
             # --- FILTER: Sequence Separation ---
-            if atom_A['chain'] == atom_B['chain']:
-                seq_dist = abs(atom_A['res_num'] - atom_B['res_num'])
+            # if atom_A['chain'] == atom_B['chain']:
+            #     seq_dist = abs(atom_A['res_num'] - atom_B['res_num'])
                 
-                # Instruction: "separated by at least 3 positions"
-                # Logic: If min_dist=3, we skip 1-2, 1-3, 1-4. We keep 1-5 (dist 4).
-                if seq_dist <= seq_sep:
-                    continue
-                interaction_type = "Intrachain"
-            else:
-                interaction_type = "Interchain"
-            # if atom_A['chain'] != atom_B['chain']:
-            #     continue
-            # interaction_type = "Intrachain"
+            #     # Instruction: "separated by at least 3 positions"
+            #     # Logic: If min_dist=3, we skip 1-2, 1-3, 1-4. We keep 1-5 (dist 4).
+            #     if seq_dist <= seq_sep:
+            #         continue
+            #     interaction_type = "Intrachain"
+            # else:
+            #     interaction_type = "Interchain"
+            if atom_A['chain'] != atom_B['chain']:
+                continue
+            interaction_type = "Intrachain"
 
             # --- CALCULATION: Euclidean distance ---
             dist = atom_A['atom'] - atom_B['atom']
