@@ -263,4 +263,3 @@ python train.py -d ../data/cif -f cif -m histogram -o profiles/all_atom_v1
 - The `train.py` arguments are identical to the main version, but the `-a/--atom` argument is ignored as all atoms are automatically included.
 - **Histogram mode** (`-m histogram`) is recommended for initial runs as it is faster and handles sparse data better than KDE for the vast number of specific atom pairs.
 
-
